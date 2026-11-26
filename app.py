@@ -84,7 +84,7 @@ def _gemini_model_name() -> str:
     configured = os.getenv("GEMINI_MODEL", "").strip()
     legacy = {"gemini-2.5-flash", "models/gemini-2.5-flash", "gemini-2.5-flash-preview"}
     if not configured or configured in legacy:
-        return "gemini-3.8-flash"
+        return "gemini-3.5-flash-lite"
     return configured.removeprefix("models/")
 
 
@@ -387,10 +387,8 @@ def product_chat(message, history, session):
         try:
             answer = gemini_suggest(message, session)
         except Exception as exc:
-            answer = (
-                "I'm having trouble reaching Gemini right now. "
-                f"Please try sending your message again. Detail: {type(exc).__name__}: {exc}"
-            )
+            logging.getLogger(__name__).warning("Gemini fallback to local_suggest: %s", exc)
+            answer = local_suggest(message, session)
     else:
         answer = local_suggest(message, session)
 
