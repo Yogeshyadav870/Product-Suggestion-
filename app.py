@@ -848,6 +848,6 @@ with gr.Blocks(
 if __name__ == "__main__":
     demo.launch(
         server_name=os.getenv("HOST", "127.0.0.1"),
-        server_port=int(os.getenv("PORT", "7860")),
+        server_port=int(os.getenv("PORT", "7861")),
         share=False,
     )
