@@ -382,15 +382,25 @@ def local_suggest(message: str, session: dict) -> str:
 def product_chat(message, history, session):
     session = session or initial_state()
     session.setdefault("session_id", str(uuid.uuid4()))
+    clean_message = str(message or "").strip()
+    if not clean_message:
+        shopping = session.get("shopping", {})
+        recommendations = shopping.get("recommendations", [])
+        recommendation_panel = (
+            catalogue.format_recommendations(recommendations)
+            if recommendations else
+            "Your recommendations will appear here once AAHVANI understands what you need."
+        )
+        return list(history or []), session, recommendation_panel, ""
 
     if os.getenv("GEMINI_API_KEY", "").strip() and GEMINI_AVAILABLE:
         try:
-            answer = gemini_suggest(message, session)
+            answer = gemini_suggest(clean_message, session)
         except Exception as exc:
             logging.getLogger(__name__).warning("Gemini fallback to local_suggest: %s", exc)
-            answer = local_suggest(message, session)
+            answer = local_suggest(clean_message, session)
     else:
-        answer = local_suggest(message, session)
+        answer = local_suggest(clean_message, session)
 
     history = list(history or [])
     history.extend([
@@ -785,11 +795,11 @@ with gr.Blocks(
             # Quick suggestion buttons
             gr.HTML("""
             <div class="quick-suggestions" id="quick-suggestions">
-                <button onclick="document.querySelector('#shopping-message textarea').value = 'I want to buy a phone under 25000'; document.querySelector('#shopping-send').click();">📱 Phone under ₹25K</button>
-                <button onclick="document.querySelector('#shopping-message textarea').value = 'Suggest a laptop for coding under 60000'; document.querySelector('#shopping-send').click();">💻 Laptop under ₹60K</button>
-                <button onclick="document.querySelector('#shopping-message textarea').value = 'Best headphones under 5000'; document.querySelector('#shopping-send').click();">🎧 Headphones under ₹5K</button>
-                <button onclick="document.querySelector('#shopping-message textarea').value = 'I need running shoes under 5000'; document.querySelector('#shopping-send').click();">👟 Shoes under ₹5K</button>
-                <button onclick="document.querySelector('#shopping-message textarea').value = 'Suggest a smartwatch under 3000'; document.querySelector('#shopping-send').click();">⌚ Watch under ₹3K</button>
+                <button type="button" onclick="const ta = document.querySelector('#shopping-message textarea'); ta.value = 'I want to buy a phone under 25000'; ta.dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('#shopping-send').click(), 50);">📱 Phone under ₹25K</button>
+                <button type="button" onclick="const ta = document.querySelector('#shopping-message textarea'); ta.value = 'Suggest a laptop for coding under 60000'; ta.dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('#shopping-send').click(), 50);">💻 Laptop under ₹60K</button>
+                <button type="button" onclick="const ta = document.querySelector('#shopping-message textarea'); ta.value = 'Best headphones under 5000'; ta.dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('#shopping-send').click(), 50);">🎧 Headphones under ₹5K</button>
+                <button type="button" onclick="const ta = document.querySelector('#shopping-message textarea'); ta.value = 'I need running shoes under 5000'; ta.dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('#shopping-send').click(), 50);">👟 Shoes under ₹5K</button>
+                <button type="button" onclick="const ta = document.querySelector('#shopping-message textarea'); ta.value = 'Suggest a smartwatch under 3000'; ta.dispatchEvent(new Event('input', { bubbles: true })); setTimeout(() => document.querySelector('#shopping-send').click(), 50);">⌚ Watch under ₹3K</button>
             </div>
             """)
 
